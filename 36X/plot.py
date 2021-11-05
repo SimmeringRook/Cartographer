@@ -22,10 +22,17 @@ rcoord = np.arange( int(2*M), int( (r_max*M)/bookkeeper_rstep ) )
 
 radial_position_at_time_t = np.zeros( np.shape(tcoord) )
 v_effective = np.zeros( np.shape(rcoord) )
+phi_position_at_rcoord = np.zeros( np.shape(rcoord) )
 
-def shape_of_bound_orbit():
-    pass
+def shape_of_bound_orbit(rcoordinate, orbitalAngularMomentum, totalenergy_per_unitrestmass):
+    return (orbitalAngularMomentum / np.power(rcoordinate, 2)) * 1 / np.power(( np.power(totalenergy_per_unitrestmass, 2) - (1 - (2*M)/rcoordinate) * (1 + np.power( (orbitalAngularMomentum / rcoordinate), 2) ) ), 0.5)
 
+''' 
+    - This should only be a straight line from the rain drop's view
+    - Shell observers should see an increase up to their shell and then decrease to 0 at 2M
+    - Bookkeeper should see an increase up to some r = ??M before decreasing to 0 at 2M
+    - At some point, work on limiting case as Shell -> 2M, slope -> c
+'''
 def radial_position_at_propertime(tau):
     '''
     Using Equation 9.38 from Page 198 of Hartle:
@@ -38,9 +45,18 @@ def radial_position_at_propertime(tau):
 def effective_potential(rcoordinate, orbitalAngularMomentum):
     return (- (G*M)/rcoordinate + np.power( (orbitalAngularMomentum / rcoordinate), 2) * 0.5 - ( (G*M)/np.power(c, 2) ) * (np.power(orbitalAngularMomentum, 2) / np.power(rcoordinate, 3)) ) * (1/ np.power(c, 2))
 
-def make_plot(horizontalValues, verticalValues):
+'''
+Make a series of plots including:
+    - Limiting cases: BK, 2M Shell
+    - Rain Drop (Stone frame, but only with radial motion, starts from rest) / Stone's own frame
+    - Shells: 3M, 5M, 20M (? -> far enough away to show trend towards BK)
+'''
+def make_plot(horizontalValues, verticalValues, plotInfo):
     fig, ax = plt.subplots()
     ax.plot(horizontalValues, verticalValues)
+    ax.set_title(plotInfo[0])
+    ax.set_xlabel(plotInfo[1])
+    ax.set_ylabel(plotInfo[2])
     plt.show()
 
 def main():
@@ -49,11 +65,17 @@ def main():
     #     radial_position_at_time_t[tau - tcoord[0]] = radial_position_at_propertime(tau * bookkeeper_timestep)
     # make_plot(radial_position_at_time_t, tcoord)
 
+    # for r in rcoord:
+    #     v_effective[r - rcoord[0]] = effective_potential(r, 5)
+    # #rescale the rcoordinates to be factors of M
+    # scaled_rcoord = np.multiply(rcoord, (bookkeeper_rstep/M) )
+    # make_plot(scaled_rcoord, v_effective, tuple( ('Effective Potential', 'r coordinate (factors of M)', 'Potential') ))
+
     for r in rcoord:
-        v_effective[r - rcoord[0]] = effective_potential(r, 5)
-    #rescale the rcoordinates to be factors of M
+        phi_position_at_rcoord[r - rcoord[0]] = shape_of_bound_orbit( r, 5, 1)
     scaled_rcoord = np.multiply(rcoord, (bookkeeper_rstep/M) )
-    make_plot(scaled_rcoord, v_effective)
+    make_plot(scaled_rcoord, phi_position_at_rcoord, tuple( ('Change in Phi (?)', 'r coordinate (factors of M)', 'Phi (?)') ))
+
 
 if __name__ == '__main__':
     main()
