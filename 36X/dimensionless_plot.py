@@ -8,10 +8,12 @@ __c = 1                                 # meters per second
 __BH_Mass = 2                           # kg
 __G = 1                                 # meters^3 per (kg * second)
 
-M = (__G * __BH_Mass) / np.power(__c, 2)           # Mass of the Black Hole, as measured in meters
+#M = (__G * __BH_Mass) / np.power(__c, 2)           # Mass of the Black Hole, as measured in meters
+
+M = 5000
 
 '''Set Resolution Factors'''
-__time_step_resolution  = 0.1 * __c     # meters
+__time_step_resolution  = 1 * __c     # meters
 __r_step_resolution     = 0.1             # meters
 __phi_step_resolution   = 1             # dimensionless
 __theta_step_resolution = 1             # dimensionless
@@ -21,8 +23,8 @@ __start_time    = (0 * __c)             # meters
 __stop_time     = (10 * __c)            # meters
 __time_iteration_direction = 1 if (__start_time < __stop_time) else -1
 
-__start_r       = int(2 * M)            # meters
-__stop_r        = int(20 * M)           # meters
+__start_r       = 10500#int(2 * M)            # meters
+__stop_r        = 50001#int(20 * M)           # meters
 __r_iteration_direction = 1 if (__start_r < __stop_r) else -1
 
 __start_phi     = 0                     # dimensionless
@@ -55,7 +57,7 @@ __theta_domain  = np.arange(
                     __theta_iteration_direction
                     )
 
-def proper_distance_vs_geometric(proper_distance):
+def proper_distance_between_shells(proper_distance):
     for r in __r_domain :
         '''Since the starting value of __r_domain isn't necessarilly 0, we need to subtract the difference to access
         the first index in the array.
@@ -74,7 +76,11 @@ def proper_distance_vs_geometric(proper_distance):
             We can resolve this by multiplying by the __r_iteration_direction to correct to a positive index
             and the loop will iterrate correctly iregardless if our intervals look like: [2M, 40M] or [40M, 2M]
         '''
-        proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] = np.sqrt(1 - (2*M)/(r*__r_step_resolution)) *__r_iteration_direction
+        proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] = __r_iteration_direction / np.sqrt(1 - (2*M)/(r*__r_step_resolution))
+
+def proper_time_between_shells(proper_time):
+    for r in __r_domain :
+        proper_time[ (r - __r_domain[0]) * __r_iteration_direction ] = np.sqrt(1 - (2*M)/(r*__r_step_resolution)) * __time_iteration_direction
 
 '''
 Make a series of plots including:
@@ -83,20 +89,31 @@ Make a series of plots including:
         / Stone's own frame
     - Shells: 3M, 5M, 20M (? -> far enough away to show trend towards BK)
 '''
-def make_plot(horizontalValues, verticalValues, plotInfo):
-    fig, axs = plt.subplots(1, 2)
-    for plotNumber in range(len(plotInfo)):
-        axs[plotNumber].plot(horizontalValues[plotNumber], verticalValues[plotNumber])
-        axs[plotNumber].set_title(plotInfo[plotNumber][0])
-        axs[plotNumber].set_xlabel(plotInfo[plotNumber][1])
-        axs[plotNumber].set_ylabel(plotInfo[plotNumber][2])
+def make_plot(horizontalValues, verticalValues, plotInfo, title = ''):
 
-        # if (plotNumber > 0):
-        #     ticks = generate_r_ticks(horizontalValues[plotNumber])
-        #     axs[plotNumber].set_xticks(ticks[0])
-        #     axs[plotNumber].set_xticklabels(ticks[1])
+    if len(plotInfo) > 1:
 
-    plt.suptitle('Proper Distance vs Reduced Circumference')
+        fig, axs = plt.subplots(1, 2)
+        for plotNumber in range(len(plotInfo)):
+            axs[plotNumber].plot(horizontalValues[plotNumber], verticalValues[plotNumber])
+            axs[plotNumber].set_title(plotInfo[plotNumber][0])
+            axs[plotNumber].set_xlabel(plotInfo[plotNumber][1])
+            axs[plotNumber].set_ylabel(plotInfo[plotNumber][2])
+
+            # if (plotNumber > 0):
+            #     ticks = generate_r_ticks(horizontalValues[plotNumber])
+            #     axs[plotNumber].set_xticks(ticks[0])
+            #     axs[plotNumber].set_xticklabels(ticks[1])
+
+        plt.suptitle(title)
+
+    else:
+        fig, ax = plt.subplots()
+        ax.plot(horizontalValues, verticalValues)
+        ax.set_title(plotInfo[0][0])
+        ax.set_xlabel(plotInfo[0][1])
+        ax.set_ylabel(plotInfo[0][2])
+
     plt.show()
 
 # def generate_r_ticks(domain):
@@ -107,19 +124,34 @@ def make_plot(horizontalValues, verticalValues, plotInfo):
 #             ticks.update({multiple_of_M: str(multiple_of_M ) + "M"})
 #     return (list(ticks.keys()), list(ticks.values()))
 
-def main():
+def give_dimensions_to_domain(domain_of_coordinate, resolution_factor):
+    coordinate_array = (domain_of_coordinate * resolution_factor)
+    return coordinate_array
 
+def Example1():
     proper_distance = np.zeros( np.shape(__r_domain) )
-
-    proper_distance_vs_geometric(proper_distance)
-    dimensionlessPlotLabels = ( 'Dimensionless', 'r-coordinate', 'Proper Distance' )
+    proper_distance_between_shells(proper_distance)
 
     #give dimensions back:
-    rcoord = __r_domain * __r_step_resolution
-    proper_distance_dimension = proper_distance * __r_step_resolution
+    rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
 
-    plotLabels = ( 'Dimensionful', 'r-coordinate', 'Proper Distance' )
-    make_plot([__r_domain, rcoord], [proper_distance, proper_distance], [dimensionlessPlotLabels, plotLabels])
+    plotLabels = ( 'Disagreement in meter stick length Between Each Shell with dr=' + str(__r_step_resolution) + ' meters', 'r-coordinate location of shell', 'Proper Distance (length) of meter stick' )
+    make_plot(rcoord, proper_distance, (plotLabels, ))
+
+def Example2():
+    proper_time = np.zeros( np.shape(__r_domain) ) #Tricky! Need to comment about this later!
+    proper_distance_between_shells(proper_time)
+
+    #give dimensions back:
+    rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
+
+    plotLabels = ( 'Disagreement in light clock tick Between Each Shell with dt=' + str(__time_step_resolution) + ' meters', 'r-coordinate location of shell', 'Proper (elapsed) Time of clock tick' )
+    make_plot(rcoord, proper_time, (plotLabels, ))
+
+def main():
+
+    Example1()
+    Example2()
 
 
 if __name__ == '__main__':
