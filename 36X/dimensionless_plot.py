@@ -10,21 +10,21 @@ __G = 1                                 # meters^3 per (kg * second)
 
 #M = (__G * __BH_Mass) / np.power(__c, 2)           # Mass of the Black Hole, as measured in meters
 
-M = 5000
+M = 500
 
 '''Set Resolution Factors'''
-__time_step_resolution  = 1 * __c     # meters
-__r_step_resolution     = 0.1             # meters
-__phi_step_resolution   = 1             # dimensionless
-__theta_step_resolution = 1             # dimensionless
+__time_step_resolution  = 0.1 * __c       # meters            dt
+__r_step_resolution     = 0.1           # meters            dr
+__phi_step_resolution   = 1             # dimensionless     dphi
+__theta_step_resolution = 1             # dimensionless     dtheta
 
 ''' --- Run time constants --- '''
 __start_time    = (0 * __c)             # meters
 __stop_time     = (10 * __c)            # meters
 __time_iteration_direction = 1 if (__start_time < __stop_time) else -1
 
-__start_r       = 10500#int(2 * M)            # meters
-__stop_r        = 50001#int(20 * M)           # meters
+__start_r       = int(2 * M) + 1           # meters
+__stop_r        = int(np.power(10, 2) * M)           # meters
 __r_iteration_direction = 1 if (__start_r < __stop_r) else -1
 
 __start_phi     = 0                     # dimensionless
@@ -78,7 +78,7 @@ def proper_distance_between_shells(proper_distance):
         '''
         proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] = __r_iteration_direction / np.sqrt(1 - (2*M)/(r*__r_step_resolution))
 
-def proper_time_between_shells(proper_time):
+def proper_time_at_shell(proper_time):
     for r in __r_domain :
         proper_time[ (r - __r_domain[0]) * __r_iteration_direction ] = np.sqrt(1 - (2*M)/(r*__r_step_resolution)) * __time_iteration_direction
 
@@ -89,16 +89,16 @@ Make a series of plots including:
         / Stone's own frame
     - Shells: 3M, 5M, 20M (? -> far enough away to show trend towards BK)
 '''
-def make_plot(horizontalValues, verticalValues, plotInfo, title = ''):
+def make_plot(horizontal_values, vertical_values, plot_info, title = ''):
 
-    if len(plotInfo) > 1:
+    if len(plot_info) > 1:
 
-        fig, axs = plt.subplots(1, 2)
-        for plotNumber in range(len(plotInfo)):
-            axs[plotNumber].plot(horizontalValues[plotNumber], verticalValues[plotNumber])
-            axs[plotNumber].set_title(plotInfo[plotNumber][0])
-            axs[plotNumber].set_xlabel(plotInfo[plotNumber][1])
-            axs[plotNumber].set_ylabel(plotInfo[plotNumber][2])
+        fig, axs = plt.subplots(nrows = len(plot_info), sharex=True)
+        for plotNumber in range(len(plot_info)):
+            axs[plotNumber].plot(horizontal_values, vertical_values[plotNumber])
+            axs[plotNumber].set_title(plot_info[plotNumber][0])
+            axs[plotNumber].set_xlabel(plot_info[plotNumber][1])
+            axs[plotNumber].set_ylabel(plot_info[plotNumber][2])
 
             # if (plotNumber > 0):
             #     ticks = generate_r_ticks(horizontalValues[plotNumber])
@@ -109,11 +109,21 @@ def make_plot(horizontalValues, verticalValues, plotInfo, title = ''):
 
     else:
         fig, ax = plt.subplots()
-        ax.plot(horizontalValues, verticalValues)
-        ax.set_title(plotInfo[0][0])
-        ax.set_xlabel(plotInfo[0][1])
-        ax.set_ylabel(plotInfo[0][2])
+        ax.plot(horizontal_values, vertical_values)
+        ax.set_title(plot_info[0][0])
+        ax.set_xlabel(plot_info[0][1])
+        ax.set_ylabel(plot_info[0][2])
 
+    plt.show()
+
+def combine_plots(shared_axis, vertical_values, plot_info):
+    fig, ax = plt.subplots()
+    for plotNumber in range(len(vertical_values)):
+        ax.plot(shared_axis, vertical_values[plotNumber])
+    ax.set_title(plot_info[0])
+    ax.set_xlabel(plot_info[1])
+    ax.set_ylabel(plot_info[2])
+    ax.set_ylim([0,5])
     plt.show()
 
 # def generate_r_ticks(domain):
@@ -128,30 +138,28 @@ def give_dimensions_to_domain(domain_of_coordinate, resolution_factor):
     coordinate_array = (domain_of_coordinate * resolution_factor)
     return coordinate_array
 
-def Example1():
-    proper_distance = np.zeros( np.shape(__r_domain) )
-    proper_distance_between_shells(proper_distance)
-
-    #give dimensions back:
-    rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
-
-    plotLabels = ( 'Disagreement in meter stick length Between Each Shell with dr=' + str(__r_step_resolution) + ' meters', 'r-coordinate location of shell', 'Proper Distance (length) of meter stick' )
-    make_plot(rcoord, proper_distance, (plotLabels, ))
-
-def Example2():
-    proper_time = np.zeros( np.shape(__r_domain) ) #Tricky! Need to comment about this later!
-    proper_distance_between_shells(proper_time)
-
-    #give dimensions back:
-    rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
-
-    plotLabels = ( 'Disagreement in light clock tick Between Each Shell with dt=' + str(__time_step_resolution) + ' meters', 'r-coordinate location of shell', 'Proper (elapsed) Time of clock tick' )
-    make_plot(rcoord, proper_time, (plotLabels, ))
-
 def main():
+    proper_distance = np.zeros( np.shape(__r_domain) )
+    proper_time = np.zeros( np.shape(__r_domain) ) #Tricky! Need to comment about this later!
 
-    Example1()
-    Example2()
+    # If we invert these functions, we'll get "length contraction" and "time dilation", respectively
+    # E.g., how much slower a clock is ticking and smaller a meter stick is, at shell `r` compared to at BK
+    proper_distance_between_shells(proper_distance)
+    proper_time_at_shell(proper_time)
+
+    #give dimensions back:
+    rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
+
+    plotLabels = [
+            ( 'Disagreement in meter stick length From Shell to Bookkeeper \n with dr=' + str(__r_step_resolution) + ' meters and M=' +str(M) + ' meters',
+            'r-coordinate location of shell',
+            'Proper Distance (length) of meter stick' ),
+            ( 'Disagreement in light clock tick Between Each Shell \nwith dt=' + str(__time_step_resolution) + ' meters and M=' +str(M) + ' meters',
+             'r-coordinate location of shell',
+            'Proper (elapsed) Time of clock tick' )
+        ]
+#    make_plot(rcoord, [proper_distance, proper_time], plotLabels, "Comparison of measurements for Shell Observer to Flat Space")
+    combine_plots(rcoord, [proper_distance, proper_time], plotLabels[0])
 
 
 if __name__ == '__main__':
