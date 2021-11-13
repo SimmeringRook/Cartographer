@@ -1,0 +1,19 @@
+
+GLOBAL_IN_SUPPORTING_HEADER = "GLOBAL_IN_SUPPORTING_HEADER"
+GLOBAL_IN_SUPPORTING = None
+
+_GLOBAL_IN_SUPPORTING = None
+
+def get_supporting():
+    global GLOBAL_IN_SUPPORTING
+    if GLOBAL_IN_SUPPORTING is None:
+        GLOBAL_IN_SUPPORTING = "GLOBAL_IN_SUPPORTING"
+        return GLOBAL_IN_SUPPORTING + " (initialized)"
+    return GLOBAL_IN_SUPPORTING
+
+def get_hidden_supporting():
+    global _GLOBAL_IN_SUPPORTING
+    if _GLOBAL_IN_SUPPORTING is None:
+        _GLOBAL_IN_SUPPORTING = "GLOBAL_IN_SUPPORTING"
+        return _GLOBAL_IN_SUPPORTING + " (initialized)"
+    return _GLOBAL_IN_SUPPORTING
