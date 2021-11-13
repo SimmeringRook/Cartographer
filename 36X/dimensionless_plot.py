@@ -10,7 +10,7 @@ __G = 1                                 # meters^3 per (kg * second)
 
 #M = (__G * __BH_Mass) / np.power(__c, 2)           # Mass of the Black Hole, as measured in meters
 
-M = 500
+M = 5000
 
 '''Set Resolution Factors'''
 __time_step_resolution  = 0.1 * __c       # meters            dt
@@ -24,7 +24,7 @@ __stop_time     = (10 * __c)            # meters
 __time_iteration_direction = 1 if (__start_time < __stop_time) else -1
 
 __start_r       = int(2 * M) + 1           # meters
-__stop_r        = int(np.power(10, 2) * M)           # meters
+__stop_r        = int(np.power(10, 1) * M)           # meters
 __r_iteration_direction = 1 if (__start_r < __stop_r) else -1
 
 __start_phi     = 0                     # dimensionless
@@ -57,30 +57,30 @@ __theta_domain  = np.arange(
                     __theta_iteration_direction
                     )
 
-def proper_distance_between_shells(proper_distance):
+def bookkeeper_meter_stick_as_measured_from_shell(proper_distance):
+    '''
+    Bookkeepr: This is a meter stick
+    Shell: Uh, you should get a refund, because that's 5 times longer than its supposed to be!
+    '''
     for r in __r_domain :
-        '''Since the starting value of __r_domain isn't necessarilly 0, we need to subtract the difference to access
-        the first index in the array.
-        E.g., 
-            We want the r-coordinate domain of our calculations to be within [2M, 40M] with a resolution of 0.1.
-            __r_domain will have the values in an array of size (stop - start)/resolution;
-            So, during the first iteration of this loop, `r` will have the value of (2M / 0.1) = 20M.
-            We want to use `r` to also index the proper_distance array, as they are of the same length, so:
-            (r - __r_domain[0]) = 0
-        
-        Next problem: we've set the step direction for the domains to dynamically respond to different orders.
-        E.g.,
-            (r - __r_domain[0]) = 0 still works for the first iteration of the loop,
-            but since r = __r_domain[1], where __r_domain[1] is now less than __r_domain[0],
-            this will throw an error as "-1" is not a valid index.
-            We can resolve this by multiplying by the __r_iteration_direction to correct to a positive index
-            and the loop will iterrate correctly iregardless if our intervals look like: [2M, 40M] or [40M, 2M]
-        '''
-        proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] = __r_iteration_direction / np.sqrt(1 - (2*M)/(r*__r_step_resolution))
+        proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] = __r_step_resolution / np.sqrt(1 - (2*M)/(r*__r_step_resolution))
 
-def proper_time_at_shell(proper_time):
+def bookkeeper_lightclock_tick_as_measured_from_shell(proper_time):
+    '''
+    Bookkeepr: That was one tick of my light clock
+    Shell: Pretty sure you were sold a faulty clock, cause that wasn't even a full second!
+            Also, why does the your voice sound weird? You should get that microphone checked...
+    '''
     for r in __r_domain :
-        proper_time[ (r - __r_domain[0]) * __r_iteration_direction ] = np.sqrt(1 - (2*M)/(r*__r_step_resolution)) * __time_iteration_direction
+        proper_time[ (r - __r_domain[0]) * __r_iteration_direction ] = np.sqrt(1 - (2*M)/(r*__r_step_resolution)) * __time_step_resolution
+
+def shell_meter_stick_as_measured_from_bookkeeper(proper_distance):
+    for r in __r_domain :
+        proper_distance[ (r - __r_domain[0]) * __r_iteration_direction ] =  np.sqrt(1 - (2*M)/(r*__r_step_resolution)) * __r_step_resolution
+
+def shell_lightclock_tick_as_measured_from_bookkeeper(proper_time):
+    for r in __r_domain :
+        proper_time[ (r - __r_domain[0]) * __r_iteration_direction ] =  __time_step_resolution / np.sqrt(1 - (2*M)/(r*__r_step_resolution))
 
 '''
 Make a series of plots including:
@@ -144,22 +144,46 @@ def main():
 
     # If we invert these functions, we'll get "length contraction" and "time dilation", respectively
     # E.g., how much slower a clock is ticking and smaller a meter stick is, at shell `r` compared to at BK
-    proper_distance_between_shells(proper_distance)
-    proper_time_at_shell(proper_time)
+    bookkeeper_meter_stick_as_measured_from_shell(proper_distance)
+    bookkeeper_lightclock_tick_as_measured_from_shell(proper_time)
 
     #give dimensions back:
     rcoord = give_dimensions_to_domain(__r_domain, __r_step_resolution)
 
     plotLabels = [
-            ( 'Disagreement in meter stick length From Shell to Bookkeeper \n with dr=' + str(__r_step_resolution) + ' meters and M=' +str(M) + ' meters',
+            ( "Flat Space 'meter stick' at from Shell \n with dr=" + str(__r_step_resolution) + " meters",
             'r-coordinate location of shell',
-            'Proper Distance (length) of meter stick' ),
-            ( 'Disagreement in light clock tick Between Each Shell \nwith dt=' + str(__time_step_resolution) + ' meters and M=' +str(M) + ' meters',
+            "Equivalent measured distance at shell (dr_shell)" ),
+            ( "Observed in light clock tick Between Each Shell \n with dt=" + str(__time_step_resolution) + " meters",
              'r-coordinate location of shell',
-            'Proper (elapsed) Time of clock tick' )
+            "Equivalent elapsed time at shell (dt_shell)" )
         ]
-#    make_plot(rcoord, [proper_distance, proper_time], plotLabels, "Comparison of measurements for Shell Observer to Flat Space")
-    combine_plots(rcoord, [proper_distance, proper_time], plotLabels[0])
+
+    length_contraction_factor_at_shell = np.zeros( np.shape(__r_domain) )
+    time_dilaton_factor_at_shell = np.zeros( np.shape(__r_domain) )
+
+    bookkeeper_meter_stick_as_measured_from_shell(length_contraction_factor_at_shell)
+    bookkeeper_lightclock_tick_as_measured_from_shell(time_dilaton_factor_at_shell)
+
+    #remove dimensions to create figures of merit:
+
+    length_contraction_factor_at_shell = length_contraction_factor_at_shell / __r_step_resolution
+    time_dilaton_factor_at_shell = time_dilaton_factor_at_shell / __time_step_resolution
+
+    make_plot(rcoord, [proper_distance, proper_time], plotLabels, "Disagreement in measurements for Shell Observer versus Flat Space \n M=" +str(M) + " meters")
+    
+    plotLabels = [
+            ( "Flat Space 'meter stick' at from Shell \n with dr=" + str(__r_step_resolution) + " meters",
+            'r-coordinate location of shell',
+            "Length contraction factor (dr_shell / dr)" ),
+            ( "Observed in light clock tick Between Each Shell \n with dt=" + str(__time_step_resolution) + " meters",
+             'r-coordinate location of shell',
+            "Time Dilaton factor (dt_shell / dt)" )
+        ]
+
+    make_plot(rcoord, [length_contraction_factor_at_shell, time_dilaton_factor_at_shell], plotLabels, "Graviational Effects on Shell Observer Measurements \n versus Flat Space with Black Hole Mass = " +str(M) + " meters")
+    
+    #combine_plots(rcoord, [proper_distance, proper_time], plotLabels[0])
 
 
 if __name__ == '__main__':
