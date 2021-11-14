@@ -18,10 +18,9 @@ def get_configuration_settings():
             schwarzschild._initialize(data["physical_constants"], data["spacetime_parameters"])
             for dimension in data["coordinate_domains"]:
                 coordinate_domains.update({
-                    dimension["dimension"]: 
-                    coordinate_array.create_new_domain(
-                            start = dimension["start"],
-                            stop = dimension["stop"],
+                    dimension["dimension"]: coordinate_array.Coordinate_Array(
+                            start = dimension["start"] * schwarzschild.get_blackhole_mass_in_meters() + 1, #TODO NEED TO FIX THIS; we've hardcoded scale factors!
+                            stop = dimension["stop"] * schwarzschild.get_blackhole_mass_in_meters(),
                             resolution = dimension["step"]
                         )
                 })
