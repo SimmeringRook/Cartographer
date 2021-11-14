@@ -1,26 +1,15 @@
-from EuclideanGeometry import EuclideanGeometry
-from Latticework import Latticework
-from SchwarzschildGeometry import SchwarzschildGeometry
-from SpacetimeGeometry import SpacetimeGeometry
+import configuration_reader as cf_r
+import spacetime.schwarzschild as schwarzschild
 
 def main():
-    gridsize = tuple((4,4,4,1))
-    lattice = Latticework(gridsize)
+    
+    coordinate_domains = cf_r.get_configuration_settings()
+    if len(coordinate_domains) == 0:
+        print("Error in loading runtime_configurations.yaml. Check to make sure the file is located in the same directory and has content.")
+        return
 
-    dx = tuple((2,0,0,0))
-    dy = tuple((0,2,0,0))
-    dt = tuple((0,0,0,4))
-
-    euclideanPath = mark_out_path(dx, dy)
-    minkowskiPath = mark_out_path(dx,dt)
-
-    print("Euclidean:", euclideanPath, lattice._spacetime.Act_Metric_On(euclideanPath,euclideanPath))
-    lattice._spacetime = SchwarzschildGeometry()
-    print("Schwarzschild:", minkowskiPath, lattice._spacetime.Act_Metric_On(minkowskiPath,minkowskiPath))
-    #print(lattice._nodes)
-
-def mark_out_path(start, stop):
-    return tuple(map(lambda i, j: i - j, start, stop))
+    print(coordinate_domains)
+    print(coordinate_domains["time"])
 
 if __name__ == '__main__':
     main()
