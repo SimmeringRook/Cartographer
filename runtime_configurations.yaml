@@ -9,11 +9,11 @@ spacetime_parameters:
   angular_momentum: 0
 
 coordinate_domains:
+  - dimension: "reduced circumference"
+    start: 1001
+    stop: 500000
+    step: 0.01
   - dimension: "time"
     start: 0
     stop: 10
-    step: 0.1
-  - dimension: "reduced circumference" # as factors of M
-    start: 2
-    stop: 100
-    step: 0.1
+    step: 0.001

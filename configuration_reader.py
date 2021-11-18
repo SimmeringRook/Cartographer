@@ -15,14 +15,15 @@ def get_configuration_settings():
     try:
         with open(__configuration_file_path) as config_file:
             data = yaml.load(config_file, Loader=yaml.SafeLoader)
-            schwarzschild._initialize(data["physical_constants"], data["spacetime_parameters"])
             for dimension in data["coordinate_domains"]:
+                if (dimension["dimension"] == "reduced circumference"):
+                    schwarzschild._initialize(data["physical_constants"], data["spacetime_parameters"], dimension)
                 coordinate_domains.update({
-                    dimension["dimension"]: coordinate_array.Coordinate_Array(
-                            start = dimension["start"] * schwarzschild.get_blackhole_mass_in_meters() + 1, #TODO NEED TO FIX THIS; we've hardcoded scale factors!
-                            stop = dimension["stop"] * schwarzschild.get_blackhole_mass_in_meters(),
-                            resolution = dimension["step"]
-                        )
+                dimension["dimension"]: coordinate_array.Coordinate_Array(
+                        start = dimension["start"],
+                        stop = dimension["stop"],
+                        resolution = dimension["step"]
+                    )
                 })
 
     except yaml.YAMLError as exc:
