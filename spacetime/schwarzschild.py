@@ -84,3 +84,34 @@ def get_bookkeeper_speed_of_infalling_stone():
     
 def get_shell_speed_of_infalling_stone():
     return (- np.sqrt(ALMOST_CURVATURE_FACTOR))
+
+def get_speed_measurements_from_specified_shell(shell_r_coordinate):
+    '''
+    dr_shell = dr/curvature -> dr_shell = 1 = dr/curvature
+    '''
+    M = get_blackhole_mass_in_meters()
+    constants = -np.true_divide(np.multiply(shell_r_coordinate, np.sqrt(2*M)), shell_r_coordinate - 2*M)
+    return np.multiply(np.true_divide(constants, np.sqrt(np.multiply(r_coord_local.domain, r_coord_local.step_resolution))), CURVATURE_FACTORS)
+    #return np.sum(np.multiply(get_shell_speed_of_infalling_stone(), np.heaviside(shell_r_coordinate, 1))
+    # numerator = np.multiply(np.power(CURVATURE_FACTORS, 2), -np.sqrt(ALMOST_CURVATURE_FACTOR))
+    # denominator = np.multiply(np.sqrt(np.ones(np.shape(r_coord_local.domain))-np.reciprocal(np.true_divide(np.multiply(shell_r_coordinate, dr_bookkeeper), 2*M))), CURVATURE_FACTORS)
+    # print(numerator, denominator, (numerator/denominator))
+    # return np.true_divide(numerator, denominator)
+
+# def get_speed_measurements_from_specified_shell(shell_r_coordinate):
+#     '''
+#     dr_shell = dr/curvature -> dr_shell = 1 = dr/curvature
+#     '''
+#     M = get_blackhole_mass_in_meters()
+#     new_dr_bookkeeper = np.sqrt(1-np.true_divide(2*M, shell_r_coordinate* r_coord_local.step_resolution)) * r_coord_local.step_resolution
+#     constants = -np.true_divide(np.multiply(shell_r_coordinate, np.sqrt(2*M)), shell_r_coordinate - 2*M)
+#     return np.multiply(np.true_divide(constants, np.sqrt(np.multiply(r_coord_local.domain, new_dr_bookkeeper))), CURVATURE_FACTORS)
+
+def get_speed_measurements_from_shells_when_dropped_from(drop_start):
+    '''
+    EBH, Page 3-30
+    Equation 47
+    '''
+    M = get_blackhole_mass_in_meters()
+    constants = 2*M/drop_start
+    return -np.sqrt(np.true_divide(np.subtract(ALMOST_CURVATURE_FACTOR, constants), (1 - constants)))

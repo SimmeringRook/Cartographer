@@ -11,7 +11,7 @@ spacetime_parameters:
 coordinate_domains:
   - dimension: "reduced circumference"
     start: 1001
-    stop: 500000
+    stop: 10000
     step: 0.01
   - dimension: "time"
     start: 0
