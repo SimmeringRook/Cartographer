@@ -57,7 +57,7 @@ def main():
     print(np.shape(shell_stone_freefall_speed), np.shape(coordinate_domains["reduced circumference"].domain))
     for r_coord in coordinate_domains["reduced circumference"].domain:
         fiveM_speed[r_coord - int((2*M + 1)/dr_bookkeeper)] = schwarzschild.tevian_speed_at_shell(initial_wavelength, r_coord, five_M)
-    shells.append(schwarzschild.tevian_speed_at_shell)
+    shells.append(fiveM_speed)
     # for shell_coord in np.arange(coordinate_domains["reduced circumference"].domain[0], five_M, (M/dr_bookkeeper)):
     #     shells.append(schwarzschild.get_speed_measurements_from_specified_shell(shell_coord))
 
