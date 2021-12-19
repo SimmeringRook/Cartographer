@@ -38,9 +38,6 @@ def make_plot_speed(horizontal_values, vertical_values, plot_info, title = '', c
 def main():
     
     coordinate_domains = cf_r.get_configuration_settings()
-    if len(coordinate_domains) == 0:
-        print("Error in loading runtime_configurations.yaml. Check to make sure the file is located in the same directory and has content.")
-        return
 
     # proper_distance = schwarzschild.get_bookkeeper_meter_stick_as_measured_from_shell(coordinate_domains["reduced circumference"].step_resolution)
     # proper_time = schwarzschild.get_bookkeeper_lightclock_tick_as_measured_from_shell(coordinate_domains["time"].step_resolution)
@@ -50,24 +47,30 @@ def main():
     
     dr_bookkeeper = coordinate_domains["reduced circumference"].step_resolution
     M = schwarzschild.get_blackhole_mass_in_meters()
-    five_M = (20*schwarzschild.get_blackhole_mass_in_meters())/dr_bookkeeper
+    five_M = (5*M)/dr_bookkeeper
 
-    print(np.shape(np.arange(coordinate_domains["reduced circumference"].domain[0], five_M, (M/dr_bookkeeper))))
+    # print(np.shape(np.arange(coordinate_domains["reduced circumference"].domain[0], five_M, (M/dr_bookkeeper))))
 
     shells = [ ]
-    for shell_coord in np.arange(coordinate_domains["reduced circumference"].domain[0], five_M, (M/dr_bookkeeper)):
-        shells.append(schwarzschild.get_speed_measurements_from_specified_shell(shell_coord))
+    fiveM_speed = np.zeros(np.shape(coordinate_domains["reduced circumference"].domain))
+    initial_wavelength = 1/(740 * np.power(10, 6))
+    print(np.shape(shell_stone_freefall_speed), np.shape(coordinate_domains["reduced circumference"].domain))
+    for r_coord in coordinate_domains["reduced circumference"].domain:
+        fiveM_speed[r_coord - int((2*M + 1)/dr_bookkeeper)] = schwarzschild.tevian_speed_at_shell(initial_wavelength, r_coord, five_M)
+    shells.append(schwarzschild.tevian_speed_at_shell)
+    # for shell_coord in np.arange(coordinate_domains["reduced circumference"].domain[0], five_M, (M/dr_bookkeeper)):
+    #     shells.append(schwarzschild.get_speed_measurements_from_specified_shell(shell_coord))
 
-    below_2M = np.arange(coordinate_domains["reduced circumference"].domain[0]-99, (2*M)/dr_bookkeeper, -0.1)
+    # below_2M = np.arange(coordinate_domains["reduced circumference"].domain[0]-99, (2*M)/dr_bookkeeper, -0.1)
 
-    print(
-        coordinate_domains["reduced circumference"].domain[0],
-        (2*M)/dr_bookkeeper,
-        np.shape(below_2M),
-        len(shells)
-        )
-    for shell_coord in below_2M:
-        shells.append(schwarzschild.get_speed_measurements_from_specified_shell(shell_coord))
+    # print(
+    #     coordinate_domains["reduced circumference"].domain[0],
+    #     (2*M)/dr_bookkeeper,
+    #     np.shape(below_2M),
+    #     len(shells)
+    #     )
+    # for shell_coord in below_2M:
+    #     shells.append(schwarzschild.get_speed_measurements_from_specified_shell(shell_coord))
 
     # print(schwarzschild.get_speed_measurements_from_specified_shell(coordinate_domains["reduced circumference"].domain[0], dr_bookkeeper)[0])
     # print(schwarzschild.get_shell_speed_of_infalling_stone()[0])
@@ -78,7 +81,7 @@ def main():
     for c in np.linspace(0, 0.8, num=len(shells)):
         colors.append(str(c))
 
-    print(len(shells))
+    # print(len(shells))
     # fiveM_rcoord = (5*schwarzschild.get_blackhole_mass_in_meters())/dr_bookkeeper
     # fiveM_shell_freefall_speed = schwarzschild.get_speed_measurements_from_specified_shell(fiveM_rcoord, dr_bookkeeper)
 
@@ -112,11 +115,11 @@ def main():
     r_coord_as_multiples_of_M = np.true_divide(coordinate_array.add_dimensions(coordinate_domains["reduced circumference"].domain, coordinate_domains["reduced circumference"].step_resolution), schwarzschild.get_blackhole_mass_in_meters())
 
     make_plot_speed(
-        horizontal_values= r_coord_as_multiples_of_M,
-        vertical_values= [bk_stone_freefall_speed, shell_stone_freefall_speed] + shells,
-        plot_info= plotLabels,
-        title=str(dr_bookkeeper),
-        colors= colors
+        horizontal_values=r_coord_as_multiples_of_M, 
+        vertical_values=[bk_stone_freefall_speed, shell_stone_freefall_speed] + shells, 
+        plot_info=plotLabels, 
+        title=str(dr_bookkeeper), 
+        colors=colors
         )
 
 if __name__ == '__main__':
