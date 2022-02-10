@@ -48,6 +48,9 @@ def _initialize(phyiscal_constants, spacetime_parameters, r_circumference_parame
     if "in_meters" in spacetime_parameters["mass"]:
         BLACKHOLE_MASS_IN_METERS = spacetime_parameters["mass"]["in_meters"]
     
+    if (BLACKHOLE_MASS_IN_KG is None) and (BLACKHOLE_MASS_IN_METERS is None):
+        raise RuntimeError('Mass of Black Hole was not specified in the runtime_configurations.yaml file. Unable to proceed.')
+    
     import coordinate_array
 
     global r_coord_local
@@ -115,3 +118,19 @@ def get_speed_measurements_from_shells_when_dropped_from(drop_start):
     M = get_blackhole_mass_in_meters()
     constants = 2*M/drop_start
     return -np.sqrt(np.true_divide(np.subtract(ALMOST_CURVATURE_FACTOR, constants), (1 - constants)))
+
+def get_graviational_redshift(emission_r_coordinate):
+    schwarzschild_radius = 2*BLACKHOLE_MASS_IN_METERS
+    if emission_r_coordinate <= schwarzschild_radius :
+        raise ValueError('The r-coordinate must be greater than the Schwarzschild radius (2M).')
+    return 1/np.sqrt(1 - (2*BLACKHOLE_MASS_IN_METERS)/emission_r_coordinate)
+
+def tevian_speed_for_path():
+    pass
+
+def tevian_speed_at_shell(inital_wavelength, shell_r_coordinate, observer_shell_r_coordinate):
+    gravitational_redshift_factor = get_graviational_redshift(shell_r_coordinate) / get_graviational_redshift(observer_shell_r_coordinate)
+    relativistic_redshift_factor = inital_wavelength / gravitational_redshift_factor #https://en.wikipedia.org/wiki/Relativistic_Doppler_effect#Relativistic_longitudinal_Doppler_effect
+    beta = np.true_divide(np.power(relativistic_redshift_factor, 2) - 1,  np.power(relativistic_redshift_factor, 2) + 1)
+    return beta * SPEED_OF_LIGHT
+    
