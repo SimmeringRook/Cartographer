@@ -1,6 +1,7 @@
 '''These are standard aliases for the packages; so I will opt to use standard notation for increased future readability'''
 import numpy as np
 import matplotlib.pyplot as plt
+from math import sqrt
 
 '''Physical constants'''
 c = 1
@@ -59,22 +60,30 @@ def make_plot(horizontalValues, verticalValues, plotInfo):
     ax.set_ylabel(plotInfo[2])
     plt.show()
 
+def get_proper_distance_for_shell(r, M, dr):
+  return dr/sqrt(1-(2*M)/r)
+
+
 def main():
-    
-    # for tau in tcoord:
-    #     radial_position_at_time_t[tau - tcoord[0]] = radial_position_at_propertime(tau * bookkeeper_timestep)
-    # make_plot(radial_position_at_time_t, tcoord)
+    M = 5
+    dr = 1
 
-    # for r in rcoord:
-    #     v_effective[r - rcoord[0]] = effective_potential(r, 5)
-    # #rescale the rcoordinates to be factors of M
-    # scaled_rcoord = np.multiply(rcoord, (bookkeeper_rstep/M) )
-    # make_plot(scaled_rcoord, v_effective, tuple( ('Effective Potential', 'r coordinate (factors of M)', 'Potential') ))
+    r_coordinates = np.arange(2*M+dr, 15*M, dr)
+    proper_distance = np.zeros(r_coordinates.shape)
+    comparison = np.zeros(r_coordinates.shape)
 
-    for r in rcoord:
-        phi_position_at_rcoord[r - rcoord[0]] = shape_of_bound_orbit( r, 5, 1)
-    scaled_rcoord = np.multiply(rcoord, (bookkeeper_rstep/M) )
-    make_plot(scaled_rcoord, phi_position_at_rcoord, tuple( ('Change in Phi (?)', 'r coordinate (factors of M)', 'Phi (?)') ))
+    for r in r_coordinates:
+        proper_distance[r-(2*M+dr)] = get_proper_distance_for_shell(r, M, dr)
+        comparison[r-(2*M+dr)] = get_proper_distance_for_shell(r, M, dr)
+
+    print(proper_distance[0])
+
+    #plt.scatter(r_coordinates, proper_distance)
+    plt.plot(r_coordinates, comparison)
+    plt.title(f"Proper distance between shells separated by {dr=} meters \n and {M=} meters")
+    plt.xlabel("r-coordinate")
+    plt.ylabel("Physical distance between shells")
+    plt.savefig(fname="CoreDesign_Plot.png")
 
 
 if __name__ == '__main__':
