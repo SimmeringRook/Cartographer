@@ -114,3 +114,6 @@ dmypy.json
 .pyre/
 .vscode/settings.json
 spacetime/AEC_Risk_Simulation.py
+*.jpg
+*.gif
+*.png
